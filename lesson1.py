@@ -1,4 +1,5 @@
 import pygame
+import pygame_menu
 
 pygame.init()
 
@@ -26,10 +27,18 @@ class Button:
 
 screen = pygame.display.set_mode((600, 600))
 
+menu = pygame_menu.Menu("Welcome", 300, 300, theme=pygame_menu.themes.THEME_BLUE)
+menu.add.text_input("Name: ", default="John Doe")
+menu.add.button("Button 1", lambda: print("Button bosildi!"))
+menu.add.button("Quit", pygame_menu.events.EXIT)
+
 button = Button(
-    100, 100, 200, 50, "Click Me!", "white"
+    100, 100, 200, 50, "Click Me!", "green"
 )
-button1 = Button
+
+button1 = Button(
+    100, 200, 200, 50, "Click Me!", "red"
+)
 
 running = True
 while running:
@@ -40,4 +49,6 @@ while running:
         button1.handle_event(event)
     screen.fill((0, 0, 0))
     button.draw(screen)
+    menu.draw(screen)
+    button1.draw(screen)
     pygame.display.update()
