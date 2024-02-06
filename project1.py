@@ -34,7 +34,6 @@ for i in range(number_of_enemies):
 bulletIMG = pygame.image.load("bullet.png")
 bulletX = 0
 bulletY = 480
-
 bulletX_change = 0
 bulletY_change = 10
 bullet_status = "ready"
@@ -98,23 +97,23 @@ while running:
 
     # Dushmanlarni harakatlantirish
     for i in range(number_of_enemies):
-        print(enemyX[i])
         enemyX[i] += enemyX_change[i]
         if enemyX[i] <= 0:
             enemyX_change[i] = 4
             enemyY[i] += enemyY_change[i]
         elif enemyX[i] >= 736:
-            enemyX_change = -4
+            enemyX_change[i] = -4
             enemyY[i] += enemyY_change[i]
 
         collision = isCollision(bulletX, bulletY, enemyX[i], enemyY[i])
 
         if collision:
+            collisionSound = pygame.mixer.Sound("explosion.wav")
+            collisionSound.play()
             bulletY = 480
             bullet_status = "ready"
             enemyX[i] = random.randint(0, 750)
             enemyY[i] = random.randint(20, 150)
-
 
         enemy(enemyX[i], enemyY[i], i)
 
