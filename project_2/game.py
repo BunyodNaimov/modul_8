@@ -69,6 +69,53 @@ class Player(object):
                 screen.blit(walkLeft[0], (self.x, self.y))
 
 
+class Enemy(object):
+    walk_right_list = ["R1E.png", "R2E.png", "R3E.png", "R4E.png", "R5E.png",
+                       "R6E.png", "R7E.png", "R8E.png", "R9E.png", "R10E.png", "R11E.png"]
+
+    walk_left_list = ["L1E.png", "L2E.png", "L3E.png", "L4E.png", "L5E.png",
+                      "L6E.png", "L7E.png", "L8E.png", "L9E.png", "L10E.png", "L11E.png"]
+
+    walkRight = [pygame.image.load(image) for image in walk_right_list]
+    walkLeft = [pygame.image.load(image) for image in walk_left_list]
+
+    def __init__(self, x, y, width, height, end):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.end = end
+        self.path = [self.x, self.end]
+        self.walkCount = 0
+        self.speed = 5
+        self.hitbox = [self.x + 17, self.y + 3, 31, 57]
+        self.healt = 10
+        self.isvisible = True
+
+    def draw(self, screen):
+        self.move()
+
+        if self.isvisible:
+            if self.walkCount + 1 >= 33:
+                self.walkCount = 0
+            if self.speed > 0:
+                screen.blit(self.walkRight[self.walkCount // 3], (self.x, self.y))
+                self.walkCount += 1
+            else:
+                screen.blit(self.walkLeft[self.walkCount // 3], (self.x, self.y))
+                self.walkCount += 1
+
+            pygame.draw.rect(screen, (255, 0, 0), (self.hitbox[0], self.hitbox[1] - 20, 50, 10))
+            pygame.draw.rect(screen, (0, 128, 0),
+                             (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.healt)), 10))
+            self.hitbox = (self.x + 17, self.y + 2, 31, 57)
+
+    def move(self):
+        if self.speed > 0:
+            if self.x + self.speed < self.path[1]:
+                self.x += self.speed
+
+
 class Bullet(object):
     def __init__(self, x, y, radius, color, facing):
         self.x = x
@@ -87,12 +134,15 @@ class Bullet(object):
 def redrawGameWindow():
     screen.blit(BG, (0, 0))
     player.draw(screen)
+    enemy.draw(screen)
     for bullet in bullets:
         bullet.draw(screen)
     pygame.display.update()
 
 
 player = Player(200, 410, 64, 64)
+enemy = Enemy(100, 410, 64, 64, 470)
+
 bullets = []
 running = True
 while running:
