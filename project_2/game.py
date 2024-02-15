@@ -6,7 +6,7 @@ screen = pygame.display.set_mode((600, 480))
 pygame.display.set_caption("First Game")
 
 BG = pygame.image.load("bg.jpg")
-standing = pygame.image.load("standing.png")
+char = pygame.image.load("standing.png")
 
 clock = pygame.time.Clock()
 
@@ -33,36 +33,67 @@ walkLeft = [
     pygame.image.load("L9.png"),
 ]
 
-x = 50
-y = 400
-width = 64
-height = 64
-isJump = False
-jumpCount = 10
-left = False
-right = False
-walkCount = 0
 FPS = 27
 
 
+class Player(object):
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.isJump = False
+        self.jumpCount = 10
+        self.left = False
+        self.right = False
+        self.walkCount = 0
+        self.standing = True
+        self.speed = 5
+
+    def draw(self, screen):
+        if self.walkCount + 1 >= 27:
+            self.walkCount = 0
+
+        if not (self.standing):
+            if self.left:
+                screen.blit(walkLeft[self.walkCount // 3], (self.x, self.y))
+                self.walkCount += 1
+
+            elif self.right:
+                screen.blit(walkRight[self.walkCount // 3], (self.x, self.y))
+                self.walkCount += 1
+        else:
+            if self.right:
+                screen.blit(walkRight[0], (self.x, self.y))
+            else:
+                screen.blit(walkLeft[0], (self.x, self.y))
+
+
+class Bullet(object):
+    def __init__(self, x, y, radius, color, facing):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.color = color
+        self.facing = facing
+        self.speed = 8 * facing
+
+    def draw(self, screen):
+        pygame.draw.circle(
+            screen, self.color, (self.x, self.y), self.radius
+        )
+
+
 def redrawGameWindow():
-    global walkCount
     screen.blit(BG, (0, 0))
-
-    if walkCount + 1 >= FPS:
-        walkCount = 0
-
-    if left:
-        screen.blit(walkLeft[walkCount // 3], (x, y))
-        walkCount += 1
-    elif right:
-        screen.blit(walkRight[walkCount // 3], (x, y))
-        walkCount += 1
-    else:
-        screen.blit(standing, (x, y))
+    player.draw(screen)
+    for bullet in bullets:
+        bullet.draw(screen)
     pygame.display.update()
 
 
+player = Player(200, 410, 64, 64)
+bullets = []
 running = True
 while running:
     clock.tick(FPS)
@@ -71,34 +102,58 @@ while running:
         if event.type == pygame.QUIT:
             running = False
             exit()
+
+    for bullet in bullets:
+        if bullet.x < 600 and bullet.x > 0:
+            bullet.x += bullet.speed
+        else:
+            bullets.pop(bullets.index(bullet))
+
     keys = pygame.key.get_pressed()
 
-    if keys[pygame.K_LEFT]:
-        left = True
-        right = False
-    elif keys[pygame.K_RIGHT]:
-        right = True
-        left = False
-    else:
-        right = False
-        left = False
-        walkCount = 0
-
-    if not isJump:
-        if keys[pygame.K_SPACE]:
-            isJump = True
-            right = False
-            left = False
-            walkCount = 0
-    else:
-        if jumpCount >= -10:
-            neg = 1
-            if jumpCount < 0:
-                neg = -1
-            y -= (jumpCount ** 2) * 0.5 * neg
-            jumpCount -= 1
+    if keys[pygame.K_SPACE]:
+        if player.left:
+            facing = -1
         else:
-            isJump = False
-            jumpCount = 10
+            facing = 1
+        print(len(bullets))
+        if len(bullets) < 5:
+            bullets.append(
+                Bullet(round(player.x + player.width // 2),
+                       round(player.y + player.height // 2),
+                       6, (0, 0, 0), facing)
+            )
+
+    if keys[pygame.K_LEFT]:
+        player.x -= player.speed
+        player.left = True
+        player.right = False
+        player.standing = False
+
+    elif keys[pygame.K_RIGHT]:
+        player.x += player.speed
+        player.right = True
+        player.left = False
+        player.standing = False
+    else:
+        player.standing = True
+        player.walkCount = 0
+
+    if not player.isJump:
+        if keys[pygame.K_UP]:
+            player.isJump = True
+            player.right = False
+            player.left = False
+            player.walkCount = 0
+    else:
+        if player.jumpCount >= -10:
+            neg = 1
+            if player.jumpCount < 0:
+                neg = -1
+            player.y -= (player.jumpCount ** 2) * 0.5 * neg
+            player.jumpCount -= 1
+        else:
+            player.isJump = False
+            player.jumpCount = 10
 
     redrawGameWindow()
