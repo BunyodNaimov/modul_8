@@ -114,6 +114,15 @@ class Enemy(object):
         if self.speed > 0:
             if self.x + self.speed < self.path[1]:
                 self.x += self.speed
+            else:
+                self.speed = self.speed * -1
+                self.walkCount = 0
+        else:
+            if self.x - self.speed > self.path[0]:
+                self.x += self.speed
+            else:
+                self.speed = self.speed * -1
+                self.walkCount = 0
 
 
 class Bullet(object):
