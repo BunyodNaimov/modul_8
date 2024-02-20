@@ -2,13 +2,19 @@ import pygame
 
 pygame.init()
 
-screen = pygame.display.set_mode((600, 480))
+screen = pygame.display.set_mode((500, 480))
 pygame.display.set_caption("First Game")
 
 BG = pygame.image.load("bg.jpg")
 char = pygame.image.load("standing.png")
 
 clock = pygame.time.Clock()
+
+bullet_sound = pygame.mixer.Sound('bullet.mp3')
+hit_sound = pygame.mixer.Sound("hit.mp3")
+
+music = pygame.mixer.Sound("music.mp3")
+music.play()
 
 walkRight = [
     pygame.image.load("R1.png"),
@@ -49,6 +55,7 @@ class Player(object):
         self.walkCount = 0
         self.standing = True
         self.speed = 5
+        self.hitbox = (self.x + 17, self.y + 11, 29, 52)
 
     def draw(self, screen):
         if self.walkCount + 1 >= 27:
@@ -67,6 +74,26 @@ class Player(object):
                 screen.blit(walkRight[0], (self.x, self.y))
             else:
                 screen.blit(walkLeft[0], (self.x, self.y))
+
+    def hit(self):
+        self.isJump = False
+        self.jumpCount = 10
+        self.x = 100
+        self.y = 410
+        self.walkCount = 0
+        font1 = pygame.font.SysFont('None', 100)
+        text = font1.render('-5', True, (255, 0, 0))
+        screen.blit(text, (250 - (text.get_width() / 2), 200))
+        pygame.display.update()
+
+        i = 0
+        while i < 200:
+            pygame.time.delay(10)
+            i += 1
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    i = 201
+                    quit()
 
 
 class Enemy(object):
@@ -124,6 +151,12 @@ class Enemy(object):
                 self.speed = self.speed * -1
                 self.walkCount = 0
 
+    def hit(self):
+        if self.healt > 0:
+            self.healt -= 1
+        else:
+            self.isvisible = False
+
 
 class Bullet(object):
     def __init__(self, x, y, radius, color, facing):
@@ -150,12 +183,22 @@ def redrawGameWindow():
 
 
 player = Player(200, 410, 64, 64)
-enemy = Enemy(100, 410, 64, 64, 470)
+enemy = Enemy(10, 410, 64, 64, 470)
+
+score = 0
 
 bullets = []
 running = True
 while running:
     clock.tick(FPS)
+
+    if enemy.isvisible == True:
+        if player.hitbox[1] < enemy.hitbox[1] + enemy.hitbox[3] and \
+                player.hitbox[1] + player.hitbox[3] > enemy.hitbox[1]:
+            if player.hitbox[0] + player.hitbox[2] > enemy.hitbox[0] and \
+                    player.hitbox[0] < enemy.hitbox[0] + enemy.hitbox[2]:
+                player.hit()
+                score += 1
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -163,6 +206,15 @@ while running:
             exit()
 
     for bullet in bullets:
+        if bullet.y - bullet.radius < enemy.hitbox[1] + enemy.hitbox[3] and \
+                bullet.y + bullet.radius > enemy.hitbox[1]:
+            if bullet.x + bullet.radius > enemy.hitbox[0] and \
+                    bullet.x - bullet.radius < enemy.hitbox[0] + enemy.hitbox[2]:
+                hit_sound.play()
+                enemy.hit()
+                score += 1
+                bullets.pop(bullets.index(bullet))
+
         if bullet.x < 600 and bullet.x > 0:
             bullet.x += bullet.speed
         else:
